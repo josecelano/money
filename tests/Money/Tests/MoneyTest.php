@@ -10,12 +10,36 @@
 
 namespace Money\Tests;
 
-use PHPUnit_Framework_TestCase;
-use Money\Money;
 use Money\Currency;
+use Money\InvalidArgumentException;
+use Money\Money;
+use PHPUnit_Framework_TestCase;
 
 class MoneyTest extends PHPUnit_Framework_TestCase
 {
+    public static function provideStrings()
+    {
+        return array(
+            array("1000", 100000),
+            array("1000.0", 100000),
+            array("1000.00", 100000),
+            array("0.01", 1),
+            array("1", 100),
+            array("-1000", -100000),
+            array("-1000.0", -100000),
+            array("-1000.00", -100000),
+            array("-0.01", -1),
+            array("-1", -100),
+            array("+1000", 100000),
+            array("+1000.0", 100000),
+            array("+1000.00", 100000),
+            array("+0.01", 1),
+            array("+1", 100),
+            array(".99", 99),
+            array("-.99", -99),
+        );
+    }
+
     public function testFactoryMethods()
     {
         $this->assertEquals(
@@ -36,7 +60,7 @@ class MoneyTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Money\InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testDecimalsThrowException()
     {
@@ -44,7 +68,7 @@ class MoneyTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Money\InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testStringThrowsException()
     {
@@ -78,7 +102,7 @@ class MoneyTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Money\InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testDifferentCurrenciesCannotBeAdded()
     {
@@ -102,7 +126,7 @@ class MoneyTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Money\InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testDifferentCurrenciesCannotBeSubtracted()
     {
@@ -162,7 +186,7 @@ class MoneyTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Money\InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testDifferentCurrenciesCannotBeCompared()
     {
@@ -206,29 +230,6 @@ class MoneyTest extends PHPUnit_Framework_TestCase
         $this->assertFalse(Money::EUR(1)->isZero());
         $this->assertFalse(Money::EUR(1)->isNegative());
         $this->assertFalse(Money::EUR(-1)->isPositive());
-    }
-
-    public static function provideStrings()
-    {
-        return array(
-            array("1000", 100000),
-            array("1000.0", 100000),
-            array("1000.00", 100000),
-            array("0.01", 1),
-            array("1", 100),
-            array("-1000", -100000),
-            array("-1000.0", -100000),
-            array("-1000.00", -100000),
-            array("-0.01", -1),
-            array("-1", -100),
-            array("+1000", 100000),
-            array("+1000.0", 100000),
-            array("+1000.00", 100000),
-            array("+0.01", 1),
-            array("+1", 100),
-            array(".99", 99),
-            array("-.99", -99),
-        );
     }
 
     /**
