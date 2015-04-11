@@ -53,22 +53,28 @@ class Money
     }
 
     /**
-     * @param \Money\Money $other
-     * @return bool
-     */
-    public function isSameCurrency(Money $other)
-    {
-        return $this->currency->equals($other->currency);
-    }
-
-    /**
+     * @param $string
      * @throws \Money\InvalidArgumentException
+     * @return int
      */
-    private function assertSameCurrency(Money $other)
+    public static function stringToUnits($string)
     {
-        if (!$this->isSameCurrency($other)) {
-            throw new InvalidArgumentException('Different currencies');
+        $sign = "(?P<sign>[-\+])?";
+        $digits = "(?P<digits>\d*)";
+        $separator = "(?P<separator>[.,])?";
+        $decimals = "(?P<decimal1>\d)?(?P<decimal2>\d)?";
+        $pattern = "/^" . $sign . $digits . $separator . $decimals . "$/";
+
+        if (!preg_match($pattern, trim($string), $matches)) {
+            throw new InvalidArgumentException("The value could not be parsed as money");
         }
+
+        $units = $matches['sign'] == "-" ? "-" : "";
+        $units .= $matches['digits'];
+        $units .= isset($matches['decimal1']) ? $matches['decimal1'] : "0";
+        $units .= isset($matches['decimal2']) ? $matches['decimal2'] : "0";
+
+        return (int)$units;
     }
 
     /**
@@ -80,6 +86,24 @@ class Money
         return
             $this->isSameCurrency($other)
             && $this->amount == $other->amount;
+    }
+
+    /**
+     * @param \Money\Money $other
+     * @return bool
+     */
+    public function isSameCurrency(Money $other)
+    {
+        return $this->currency->equals($other->currency);
+    }
+
+    /**
+     * @param \Money\Money $other
+     * @return bool
+     */
+    public function greaterThan(Money $other)
+    {
+        return 1 == $this->compare($other);
     }
 
     /**
@@ -99,14 +123,16 @@ class Money
     }
 
     /**
-     * @param \Money\Money $other
-     * @return bool
+     * @param Money $other
+     * @throws \Money\InvalidArgumentException
      */
-    public function greaterThan(Money $other)
+    private function assertSameCurrency(Money $other)
     {
-        return 1 == $this->compare($other);
+        if (!$this->isSameCurrency($other)) {
+            throw new InvalidArgumentException('Different currencies');
+        }
     }
-    
+
     /**
      * @param \Money\Money $other
      * @return bool
@@ -124,7 +150,7 @@ class Money
     {
         return -1 == $this->compare($other);
     }
-    
+
     /**
      * @param \Money\Money $other
      * @return bool
@@ -161,7 +187,7 @@ class Money
 
     /**
      * @param \Money\Money $addend
-     *@return \Money\Money 
+     * @return \Money\Money
      */
     public function add(Money $addend)
     {
@@ -182,6 +208,21 @@ class Money
     }
 
     /**
+     * @param $multiplier
+     * @param int $rounding_mode
+     * @return \Money\Money
+     */
+    public function multiply($multiplier, $rounding_mode = self::ROUND_HALF_UP)
+    {
+        $this->assertOperand($multiplier);
+        $this->assertRoundingMode($rounding_mode);
+
+        $product = (int)round($this->amount * $multiplier, 0, $rounding_mode);
+
+        return new Money($product, $this->currency);
+    }
+
+    /**
      * @throws \Money\InvalidArgumentException
      */
     private function assertOperand($operand)
@@ -199,21 +240,6 @@ class Money
         if (!in_array($rounding_mode, array(self::ROUND_HALF_DOWN, self::ROUND_HALF_EVEN, self::ROUND_HALF_ODD, self::ROUND_HALF_UP))) {
             throw new InvalidArgumentException('Rounding mode should be Money::ROUND_HALF_DOWN | Money::ROUND_HALF_EVEN | Money::ROUND_HALF_ODD | Money::ROUND_HALF_UP');
         }
-    }
-
-    /**
-     * @param $multiplier
-     * @param int $rounding_mode
-     * @return \Money\Money
-     */
-    public function multiply($multiplier, $rounding_mode = self::ROUND_HALF_UP)
-    {
-        $this->assertOperand($multiplier);
-        $this->assertRoundingMode($rounding_mode);
-
-        $product = (int) round($this->amount * $multiplier, 0, $rounding_mode);
-
-        return new Money($product, $this->currency);
     }
 
     /**
@@ -271,30 +297,5 @@ class Money
     public function isNegative()
     {
         return $this->amount < 0;
-    }
-
-    /**
-     * @param $string
-     * @throws \Money\InvalidArgumentException
-     * @return int
-     */
-    public static function stringToUnits( $string )
-    {
-        $sign = "(?P<sign>[-\+])?";
-        $digits = "(?P<digits>\d*)";
-        $separator = "(?P<separator>[.,])?";
-        $decimals = "(?P<decimal1>\d)?(?P<decimal2>\d)?";
-        $pattern = "/^".$sign.$digits.$separator.$decimals."$/";
-
-        if (!preg_match($pattern, trim($string), $matches)) {
-            throw new InvalidArgumentException("The value could not be parsed as money");
-        }
-
-        $units = $matches['sign'] == "-" ? "-" : "";
-        $units .= $matches['digits'];
-        $units .= isset($matches['decimal1']) ? $matches['decimal1'] : "0";
-        $units .= isset($matches['decimal2']) ? $matches['decimal2'] : "0";
-
-        return (int) $units;
     }
 }
