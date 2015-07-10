@@ -74,13 +74,10 @@ class BigMoney
      * @param string $amount
      * @param Currency $currency
      * @return Decimal
+     * @throws InvalidArgumentException
      */
     public static function fromString($amount, Currency $currency)
     {
-        if (!is_float($amount)) {
-            throw new InvalidArgumentException("The amount parameter of must be a float. It's the amount, expressed in the smallest units of currency (eg cents)");
-        }
-
         $decimalAmount = Decimal::fromString($amount, 0);
 
         if (!$decimalAmount->floor()->equals($decimalAmount)) {
